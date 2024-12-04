@@ -20,6 +20,10 @@ class Board
             throw new \Exception('Space is not empty');
         }
 
+        if ($row > self::ROWS || $col > self::COLUNS) {
+            throw new \Exception('Invalid position');
+        }
+
         $this->board[$row][$col] = $player;
     }
 

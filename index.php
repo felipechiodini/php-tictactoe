@@ -18,11 +18,9 @@ $game = new Game(
 );
 
 do {
-    echo "Turno de {$game->turnOwner()}\n";
-
-    $fin = fopen ("php://stdin","r");
-    $value = fgets($fin);
-    [$x, $y] = explode(" ", $value);
-
-    $game->play($game->turnOwner(), (int) $x, (int) $y);
+    try {
+        $game->askForPlay();
+    } catch (\Throwable $th) {
+        echo $th->getMessage() . PHP_EOL;
+    }
 } while (true);

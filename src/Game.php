@@ -44,4 +44,21 @@ class Game
     {
         $this->turn = !$this->turn;
     }
+
+    public function askForPlay()
+    {
+        echo "Turno de {$this->turnOwner()}\n";
+
+        try {
+            $fin = fopen ("php://stdin","r");
+            $value = fgets($fin);
+            [$x, $y] = explode(" ", $value);
+
+            print_r([$x, $y]);
+        } catch (\Throwable $th) {
+            throw new \Exception("Ocorreu um erro ao ler a posição, tente novamente");
+        }
+
+        $this->play($this->turnOwner(), (int) $x, (int) $y);
+    }
 }
