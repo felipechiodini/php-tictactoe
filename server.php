@@ -1,26 +1,50 @@
 <?php
 
-require 'vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-use App\Board;
-use App\Circle;
-use App\Game;
-use App\Player;
-use App\Times;
+$server = new Swoole\WebSocket\Server("0.0.0.0", 9501);
 
-$player1 = new Player(new Circle);
-$player2 = new Player(new Times);
+$game = new App\Game();
 
-$game = new Game(
-    new Board(),
-    $player1,
-    $player2
-);
+$server->on('open', function (Swoole\WebSocket\Server $server, Swoole\Http\Request $request) use ($game) {
+    echo "server: handshake success with fd{$request->fd}\n";
 
-do {
-    try {
-        $game->askForPlay();
-    } catch (\Throwable $th) {
-        echo $th->getMessage() . PHP_EOL;
+    if ($game->hasPlayerCircle()) {
+        $game->setPlayerTimes($request->fd);
+        $server->push($request->fd, json_encode([
+            'method' => 'start',
+            'message' => 'You are player Times'
+        ]));
+    } else {
+        $game->setPlayerCircle($request->fd);
+        $server->push($request->fd, json_encode([
+            'method' => 'start',
+            'message' => 'You are player Circle'
+        ]));
     }
-} while (true);
+});
+
+$server->on('message', function (Swoole\WebSocket\Server $server, Swoole\WebSocket\Frame $frame) use ($game) {
+    $data = json_decode($frame->data);
+
+    if ($data->method === 'fill') {
+        $game->fillSpace($frame->fd, $data->data->x, $data->data->y);
+    }
+
+    foreach ($server->connections as $connection) {
+        $server->push($connection, json_encode([
+            'method' => 'render',
+            'data' => [
+                'x' => $data->data->x,
+                'y' => $data->data->y,
+                'player' => $frame->fd
+            ]
+        ]));
+    }
+});
+
+$server->on('close', function ($server, $fd) use ($game) {
+    $game->removePlayer($fd);
+});
+
+$server->start();

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #333;
+            color: #FFF;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FFF;
+            color: #333;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        input {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #FFF;
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table tr td {
+            border: 1px solid #FFF;
+            padding: 50px;
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+<body>
+    <h1>Bem vindo</h1>
+    <button id="play">Jogar</button>
+
+    <h2 id="player"></h2>
+
+    <table id="table" style="display: none">
+        <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        const mapMethods = {
+            'start': ({ websocket, data }) => {
+                document.querySelector("#player").textContent = data.message
+                const table = document.querySelector("#table")
+                
+                table.style.display = "block";
+
+                document.querySelectorAll('table tr').forEach((tr, trIndex) => {
+                    tr.querySelectorAll('td').forEach((td, tdIndex) => {
+                        td.addEventListener('click', () => {
+                            websocket.send(JSON.stringify({
+                                method: 'fill',
+                                data: {
+                                    x: trIndex,
+                                    y: tdIndex
+                                }
+                            }))
+                        })
+                    })
+                })
+            },
+            'fill': (data) => {
+                console.log(data);
+            },
+            'render': ({ websocket, data }) => {
+                const tr = document.querySelectorAll('table tr')[data.data.x]
+                tr.querySelectorAll('td')[data.data.y].textContent = data.data.player
+            }
+        }
+
+        const playButton = document.querySelector("#play");
+
+        playButton.addEventListener("click", (event) => {
+            event.target.disabled = true;
+
+            const websocket = new WebSocket("ws://localhost:9501");
+
+            websocket.onopen = () => {
+                console.log("Conectado ao servidor");
+            }
+
+            websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const method = mapMethods[data.method];
+
+                if (method) {
+                    method({ websocket, data });
+                } else {
+                    throw new Error(`Método ${event.data} não encontrado`);
+                }
+            }
+        })
+
+    </script>
+
+</body>
+</html>

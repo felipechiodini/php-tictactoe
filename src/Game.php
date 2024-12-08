@@ -9,23 +9,47 @@ class Game
     private $player2;
     private $turn = true;
 
-    public function __construct(Board $board, Player $player1, Player $player2)
+    public function __construct()
     {
-        $this->board = $board;
-        $this->player1 = $player1;
-        $this->player2 = $player2;
+        $this->board = new Board();
     }
 
-    public function play(Player $player, int $row, int $col)
+    public function hasPlayerCircle(): bool
     {
-        if ($this->turnOwner() !== $player) {
+        return isset($this->player1);
+    }
+
+    public function setPlayerCircle(string $id)
+    {
+        $this->player1 = new Player($id, new Circle());
+    }
+
+    public function setPlayerTimes(string $id)
+    {
+        $this->player2 = new Player($id, new Times());
+    }
+
+    public function removePlayer(string $id)
+    {
+        if (@$this->player1->id === $id) {
+            $this->player1 = null;
+        }
+
+        if (@$this->player2->id === $id) {
+            $this->player2 = null;
+        }
+    }
+
+    public function fillSpace(string $playerId, int $row, int $col)
+    {
+        if ($this->turnOwner()->id !== $playerId) {
             throw new \Exception('Not your turn');
         }
 
-        $this->board->fillSpace($row, $col, $player);
+        $this->board->fillSpace($row, $col, $this->turnOwner());
 
-        if ($this->board->checkWin($player)) {
-            die("Winner is {$player}");
+        if ($this->board->checkWin($this->turnOwner())) {
+            die("Winner is {$this->turnOwner()}");
         }
 
         $this->toogleTurn();
@@ -43,22 +67,5 @@ class Game
     public function toogleTurn()
     {
         $this->turn = !$this->turn;
-    }
-
-    public function askForPlay()
-    {
-        echo "Turno de {$this->turnOwner()}\n";
-
-        try {
-            $fin = fopen ("php://stdin","r");
-            $value = fgets($fin);
-            [$x, $y] = explode(" ", $value);
-
-            print_r([$x, $y]);
-        } catch (\Throwable $th) {
-            throw new \Exception("Ocorreu um erro ao ler a posição, tente novamente");
-        }
-
-        $this->play($this->turnOwner(), (int) $x, (int) $y);
     }
 }

@@ -12,5 +12,7 @@
             "email": "felipechiodinibona@hotmail.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "swoole/ide-helper": "~5.0.0"
+    }
 }

@@ -1,7 +1,9 @@
-FROM phpswoole/swoole:php8.4-alpine
+FROM phpswoole/swoole:php8.4
 
 WORKDIR /var/www
 
 COPY . /var/www
 
-RUN docker-php-ext-install pdo_mysql
+EXPOSE 9501
+
+RUN docker-php-ext-install mysqli pdo_mysql
