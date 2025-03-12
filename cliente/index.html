@@ -63,6 +63,10 @@
     <h1>Bem vindo</h1>
     <button id="play">Jogar</button>
 
+
+    <button id="create-room">Criar sala</button>
+    <button id="enter-room">Entrar na sala</button>
+
     <h2 id="player"></h2>
 
     <table id="table" style="display: none">
@@ -87,8 +91,8 @@
 
     <script>
         const mapMethods = {
-            'start': ({ websocket, data }) => {
-                document.querySelector("#player").textContent = data.message
+            'start': ({ websocket, data: { message } }) => {
+                document.querySelector("#player").textContent = message
                 const table = document.querySelector("#table")
                 
                 table.style.display = "block";
@@ -107,6 +111,9 @@
                     })
                 })
             },
+            'room-created': (data) => {
+                console.log('redirecionando para a sala...')
+            } ,
             'fill': (data) => {
                 console.log(data);
             },
@@ -116,28 +123,47 @@
             }
         }
 
-        const playButton = document.querySelector("#play");
+        const websocket = new WebSocket("ws://localhost:9501");
 
-        playButton.addEventListener("click", (event) => {
-            event.target.disabled = true;
+        websocket.onopen = () => {
+            console.log("Conectado ao servidor");
+        }
 
-            const websocket = new WebSocket("ws://localhost:9501");
+        websocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const method = mapMethods[data.key];
 
-            websocket.onopen = () => {
-                console.log("Conectado ao servidor");
+            if (method) {
+                method({ websocket, data: data.data });
+            } else {
+                throw new Error(`Método ${event.data} não encontrado`);
             }
+        }
 
-            websocket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const method = mapMethods[data.method];
+        document.getElementById('create-room')
+            .addEventListener('click', () => {
 
-                if (method) {
-                    method({ websocket, data });
-                } else {
-                    throw new Error(`Método ${event.data} não encontrado`);
-                }
-            }
-        })
+                websocket.send(JSON.stringify({
+                    method: 'create-room',
+                    data: {}
+                }))
+
+            })
+
+
+        document.getElementById('enter-room')
+            .addEventListener('click', () => {
+
+                websocket.send(JSON.stringify({
+                    method: 'enter',
+                    data: {
+                        id: 'aleatorio'
+                    }
+                }))
+
+            })
+
+
 
     </script>
 

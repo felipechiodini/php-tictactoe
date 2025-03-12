@@ -21,6 +21,12 @@ services:
       - .:/var/www
     networks:
       - swoole-network
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - swoole-network
 
 networks:
   swoole-network:

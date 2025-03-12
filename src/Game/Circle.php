@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Game;
 
 class Circle implements OptionInterface
 {

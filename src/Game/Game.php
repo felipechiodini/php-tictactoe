@@ -1,17 +1,16 @@
 <?php
 
-namespace App;
+namespace App\Game;
 
 class Game
 {
-    private $board;
-    private $player1;
-    private $player2;
-    private $turn = true;
+    public $board;
+    public $players;
 
-    public function __construct()
+    public function __construct(array $players)
     {
         $this->board = new Board();
+        $this->players = $players;
     }
 
     public function hasPlayerCircle(): bool
@@ -29,6 +28,11 @@ class Game
         $this->player2 = new Player($id, new Times());
     }
 
+    public function setPlayer(string $id)
+    {
+        rand(0, 1) ? $this->setplayerTimes($id) : $this->setPlayerCircle($id);
+    }
+
     public function removePlayer(string $id)
     {
         if (@$this->player1->id === $id) {
@@ -40,7 +44,7 @@ class Game
         }
     }
 
-    public function fillSpace(string $playerId, int $row, int $col)
+    public function play(string $playerId, int $row, int $col)
     {
         if ($this->turnOwner()->id !== $playerId) {
             throw new \Exception('Not your turn');
